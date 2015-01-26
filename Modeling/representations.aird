@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<viewpoint:DAnalysis xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL-XMI" xmlns:viewpoint="http://www.eclipse.org/sirius/1.1.0" xmi:id="_KhI1sKGwEeSeccHbeEe_3A" version="8.1.1">
+  <models xmi:type="bpmn2" href="BPMN/NodeSplit.bpmn2#/"/>
+</viewpoint:DAnalysis>
