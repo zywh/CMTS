@@ -30,9 +30,9 @@ public class RshParser {
 	
 	public String run() {
 
-		//String runcmd = "rsh -l " + ubr + " " + ubr + " " + cmd;
+		String runcmd = "rsh -l " + ubr + " " + ubr + " " + cmd;
 		//Commands from remote server
-		String runcmd = "ssh dliu@lucy.cogeco.net rsh -l " + ubr + " " + ubr + " " + cmd;
+		//String runcmd = "ssh dliu@lucy.cogeco.net rsh -l " + ubr + " " + ubr + " " + cmd;
 		System.out.println(runcmd);
 		StringBuffer buffer = new StringBuffer();
 		try {
