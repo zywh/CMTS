@@ -24,8 +24,7 @@ public class DropCounter {
 
 	public void updateCounter(String key, long counter) {
 		
-		//Get Change
-		System.out.println("This is second version to GIT-slave");
+		
 		newcounter.put(key, counter);
 	}
 
