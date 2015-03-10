@@ -118,9 +118,9 @@ public void reduce(IntWritable key, Iterator<IntWritable> values,
 			Path temp = new Path("temp1");
 			JobConf job1 = createJob1(conf, in, temp);
 			JobClient.runJob(job1);
-			JobConf job2 = createJob2(conf, temp, out);
-			JobClient.runJob(job2);
-			cleanup(temp, conf);
+//			JobConf job2 = createJob2(conf, temp, out);
+//			JobClient.runJob(job2);
+//			cleanup(temp, conf);
 			return 0;
 		}
 
