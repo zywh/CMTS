@@ -20,7 +20,9 @@ public class DropCounter {
 	String alarms = null;
 	Date newtime = new Date();
 	Date oldtime = new Date();
-	DateFormat ft = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
+
+
+    DateFormat ft = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
 
 	public void updateCounter(String key, long counter) {
 		

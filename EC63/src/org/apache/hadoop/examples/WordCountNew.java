@@ -1,5 +1,4 @@
-package sandbox;
-
+package org.apache.hadoop.examples;
 
 import java.io.IOException;
 import java.util.StringTokenizer;
@@ -15,7 +14,7 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.util.GenericOptionsParser;
 
-public class WordCount {
+public class WordCountNew {
 
   public static class TokenizerMapper 
        extends Mapper<Object, Text, Text, IntWritable>{
@@ -25,10 +24,15 @@ public class WordCount {
       
     public void map(Object key, Text value, Context context
                     ) throws IOException, InterruptedException {
-      StringTokenizer itr = new StringTokenizer(value.toString());
+     // StringTokenizer itr = new StringTokenizer(value.toString());
+    	//Add more delimeters
+    	StringTokenizer itr = new StringTokenizer(value.toString(), " \";:."); 
+		
       while (itr.hasMoreTokens()) {
         word.set(itr.nextToken());
-        context.write(word, one);
+        //write only it's word
+        if (word.toString().matches("\\w+"))context.write(word, one);
+        
       }
     }
   }
@@ -45,6 +49,8 @@ public class WordCount {
         sum += val.get();
       }
       result.set(sum);
+      //Write only if count is less than 1000  and get rid of digits
+      if (sum < 1000 && key.toString().matches("[a-zA-Z]+") )
       context.write(key, result);
     }
   }
@@ -52,12 +58,13 @@ public class WordCount {
   public static void main(String[] args) throws Exception {
     Configuration conf = new Configuration();
     String[] otherArgs = new GenericOptionsParser(conf, args).getRemainingArgs();
+    System.out.println("Argument Length:" + otherArgs.length);
     if (otherArgs.length != 2) {
       System.err.println("Usage: wordcount <in> <out>");
       System.exit(2);
     }
     Job job = new Job(conf, "word count");
-    job.setJarByClass(WordCount.class);
+    job.setJarByClass(WordCountNew.class);
     job.setMapperClass(TokenizerMapper.class);
     job.setCombinerClass(IntSumReducer.class);
     job.setReducerClass(IntSumReducer.class);
