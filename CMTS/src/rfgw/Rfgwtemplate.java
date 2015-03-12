@@ -24,6 +24,10 @@ public class Rfgwtemplate {
 	static Map<String, Integer> lqamgroup = new HashMap<String, Integer>();
 
 	static Properties prop = new Properties();
+	
+	Rfgwtemplate() {
+		
+	}
 
 	public static void main(String[] args) throws IOException {
 		if (args.length < 1) {
