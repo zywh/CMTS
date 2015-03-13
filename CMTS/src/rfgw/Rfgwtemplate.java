@@ -1,32 +1,37 @@
 package rfgw;
 
-//import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileInputStream;
 //import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-//import java.io.InputStream;
-//import java.util.Date;
 import java.util.Properties;
-
-import javax.swing.JFileChooser;
 
 public class Rfgwtemplate {
 
 	static Map<String, Integer> lqamgroup = new HashMap<String, Integer>();
-
 	static Properties prop = new Properties();
-	
-	Rfgwtemplate() {
-		
+	int usrm = 0;
+
+	Rfgwtemplate(String filename) throws IOException {
+
+		FileInputStream in = new FileInputStream(filename);
+
+		// Read the property file
+		prop.load(in);
+		in.close();
+		lqamgroup = lqamload();
+		// Check How Many USRM in the file
+
+		for (int i = 1; i <= 4; i++) {
+			String key = "USRM" + i;
+			// System.out.println(key);
+			if (prop.getProperty(key) != null)
+				usrm = usrm + 1;
+		}
 	}
 
 	public static void main(String[] args) throws IOException {
@@ -35,36 +40,29 @@ public class Rfgwtemplate {
 			System.exit(0);
 		}
 		String filename = args[0];
+		Rfgwtemplate rfgw = new Rfgwtemplate(filename);
+		int usrm = rfgw.usrm;
 
-		FileInputStream in = new FileInputStream(filename);
-		// Read the property file
-		prop.load(in);
-		in.close();
-
-		lqamload();
-		// Check How Many USRM in the file
-		int usrm = 0;
-		for (int i = 1; i <= 4; i++) {
-			String key = "USRM" + i;
-			// System.out.println(key);
-			if (prop.getProperty(key) != null)
-				usrm = usrm + 1;
+		List<String> sdviplist = rfgw.loopback1(usrm); // Get SDV IPs
+		List<String> vodiplist = null;
+		// Generate Port Channel Configuration
+		rfgw.portchannel();
+		// Generate VoD IPs
+		if (prop.getProperty("LOOPBACK2_START") != null) {
+			vodiplist = rfgw.loopback2();
 		}
-
-		// List<String> sdviplist = loopback1(usrm); // Get SDV IPs
-		// List <String> vodiplist = null ;
-		portchannel(); // Generate Port Channel Configuration
-		// if (prop.getProperty("LOOPBACK2_START") != null ) { vodiplist =
-		// loopback2(); } //VoD IPs
-		//
-		// qp(usrm, sdviplist); //Generate QP Configuration
-		// videoroute(usrm, sdviplist ,vodiplist); //Generate Video Load Balance
-		// Group Configuration
-		// qam(); //Generate Basic Video QAM Configuration
+		// Generate QP Configuration
+		rfgw.qp(usrm, sdviplist);
+		// Generate Video Load Balance Group Configuration
+		/*
+		 * 
+		 */
+		rfgw.videoroute(usrm, sdviplist, vodiplist);
+		rfgw.qam(); // Generate Basic Video QAM Configuration
 
 	}
 
-	public static void portchannel() throws IOException {
+	public void portchannel() throws IOException {
 		String s = "#Port Channel and Default Route Section Start\n";
 		String pcname = prop.getProperty("PORTCHANNEL").replaceAll("\\s+", "");
 		String pcip = prop.getProperty("PORTCHANNELIP").replaceAll("\\s+", "");
@@ -99,7 +97,7 @@ public class Rfgwtemplate {
 
 	}
 
-	public static List<String> loopback1(int usrm) throws IOException {
+	public List<String> loopback1(int usrm) throws IOException {
 
 		String s = "#Loopback1 Section Start\n";
 		String lb1 = prop.getProperty("LOOPBACK1_START").replaceAll("\\s+", "");
@@ -119,7 +117,7 @@ public class Rfgwtemplate {
 		return ips;
 	}
 
-	public static List<String> loopback2() throws IOException {
+	public List<String> loopback2() throws IOException {
 		String lb2 = prop.getProperty("LOOPBACK2_START"); // VOD Section
 		String s = "#Loopback2 Section Start\n";
 		// buffer.append(s + "\n");
@@ -141,7 +139,7 @@ public class Rfgwtemplate {
 
 	}
 
-	public static void qp(int usrm, List<String> ips) {
+	public void qp(int usrm, List<String> ips) {
 		String s = "#QP Section Start\n";
 
 		for (int i = 1; i <= usrm; i++) {
@@ -158,8 +156,7 @@ public class Rfgwtemplate {
 
 	}
 
-	public static void videoroute(int usrm, List<String> sdvips,
-			List<String> vodips) {
+	public void videoroute(int usrm, List<String> sdvips, List<String> vodips) {
 		System.out.println("#Video Route Section Start");
 		int cards = Integer.parseInt(prop.getProperty("LINECARD"));
 
@@ -170,22 +167,25 @@ public class Rfgwtemplate {
 
 			for (int j = 1; j <= usrm; j++) {
 				int ipkey = (i - 3) * usrm - 1 + j;
+				int bitrate = 9000000 / usrm;
 				String s = "qam-partition " + j + " ip " + sdvips.get(ipkey)
-						+ " bitrate 1800000";
+						+ " bitrate " + bitrate;
 				System.out.println(s);
 			}
-
+			System.out.println("cable route linecard " + i
+					+ " load-balance-group 2");
 			// Generate route for VOD if exist
 			if (vodips != null) {
+
 				String s = "qam-partition default ip " + vodips.get(i - 3)
-						+ " bitrate 1800000";
+						+ " bitrate 9000000";
 				System.out.println(s);
 			}
 
 		}
 	}
 
-	public static void qam() {
+	public void qam() {
 		System.out.println("#QAM Section Start");
 		// buffer.append(s + "\n");
 		int cards = Integer.parseInt(prop.getProperty("LINECARD"));
@@ -252,15 +252,15 @@ public class Rfgwtemplate {
 		return ips;
 	}
 
-	public static void lqamload() {
-
+	public static Map<String, Integer> lqamload() {
+		Map<String, Integer> lgroup = new HashMap<String, Integer>();
 		// Generate first LQAM for first 40 QAMs
 		for (int i = 1; i <= 8; i++) {
-			
+
 			for (int j = 1; j <= 40; j++) {
 				String key = i + "." + j;
 				Integer group = i + (j - 1) / 8 * 10;
-				lqamgroup.put(key, group);
+				lgroup.put(key, group);
 				// System.out.println("KEY:" + key + "Value:" + group);
 			}
 
@@ -273,11 +273,11 @@ public class Rfgwtemplate {
 			for (int j = 41; j <= 48; j++) {
 				String key = i + "." + j;
 
-				lqamgroup.put(key, group);
+				lgroup.put(key, group);
 				// System.out.println("KEY:" + key + "Value:" + group);
 			}
 
 		}
-
+		return lgroup;
 	}
 }
